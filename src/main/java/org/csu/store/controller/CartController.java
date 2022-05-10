@@ -1,5 +1,5 @@
 package org.csu.store.controller;
 
-public class TestController {
+public class CartController {
     private String test;
 }
