@@ -6,16 +6,18 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-@Data
-@TableName("message")
-public class Message {
 
+@Data
+@TableName("product")
+public class Product {
     @TableId(type = IdType.AUTO)
     private Integer id;
 
-    private Integer replyId;
-    private Integer userId;
-    private Integer proId;
-    private String content;
-    private LocalDateTime time;
+    private Integer title;
+    private Integer sellerId;
+    private String type;
+    private String price;
+    private String imgUrl;
+    private String detail;
+    private LocalDateTime upTime;
 }

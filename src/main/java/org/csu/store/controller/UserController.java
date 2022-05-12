@@ -42,7 +42,7 @@ public class UserController {
     }
 
     @PostMapping("register")
-    public CommonResponse<String> register(@RequestBody @Valid User user){
+        public CommonResponse<String> register(@RequestBody @Valid User user){
         return userService.register(user);
     }
 

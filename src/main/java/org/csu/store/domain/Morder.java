@@ -3,19 +3,21 @@ package org.csu.store.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-@Data
-@TableName("message")
-public class Message {
+
+@Getter
+@Setter
+@TableName("morder")
+public class Morder {
 
     @TableId(type = IdType.AUTO)
     private Integer id;
 
-    private Integer replyId;
-    private Integer userId;
+    private Integer buyerId;
     private Integer proId;
-    private String content;
-    private LocalDateTime time;
+    private LocalDateTime Time;
+    private Integer state;
 }
