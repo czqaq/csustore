@@ -22,7 +22,9 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public CommonResponse<List<Message>> getMesList(Integer proId) {
+
         List<Message> mesList;
+
         QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("pro_id", proId);
         mesList = messageMapper.selectList(queryWrapper);
@@ -37,6 +39,7 @@ public class MessageServiceImpl implements MessageService {
         message.setProId(messageBO.getProId());
         message.setContent(messageBO.getContent());
         message.setTime(LocalDateTime.now());
+
         int row = messageMapper.insert(message);
         if (row == 0){
             return CommonResponse.createForError("留言失败");
