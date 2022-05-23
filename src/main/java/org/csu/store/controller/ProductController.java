@@ -18,14 +18,16 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @PostMapping("putPro")
+    @PostMapping("/putPro")
     public CommonResponse<String> putPro(@RequestBody ProductBO productbo ) {
         return productService.addProduct(productbo);
     }
+
     @PostMapping("/deletePro")
     public CommonResponse<String> deletePro(@RequestParam @Validated @NotBlank(message = "商品id不能为空") String proId){
         return productService.delectByproId(Integer.valueOf(proId));
     }
+
     @PostMapping("/updatePro")
     public CommonResponse<String> updatePro(@RequestBody Product product){
         product.setUpTime(LocalDateTime.now());

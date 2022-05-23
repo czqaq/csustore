@@ -30,6 +30,8 @@ public class UserController {
         CommonResponse<User> response = userService.login(username, password);
         if (response.isSuccess()) {
             session.setAttribute(CONSTANT.LOGIN_USER, response.getData());
+            String userJson = JSONUtil.objectToString(response.getData());
+            //new RedisUtil().getTemplate().opsForValue.set(session.getId(), userJson);
         }
         return response;
     }
