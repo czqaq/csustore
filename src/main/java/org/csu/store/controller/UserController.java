@@ -6,6 +6,7 @@ import org.csu.store.common.ResponseCode;
 import org.csu.store.domain.User;
 import org.csu.store.dto.UpdateUserDTO;
 import org.csu.store.service.UserService;
+import org.csu.store.util.JSONUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -44,13 +45,13 @@ public class UserController {
     }
 
     @PostMapping("register")
-        public CommonResponse<String> register(@RequestBody @Valid User user){
+    public CommonResponse<String> register(@RequestBody @Valid User user) {
         return userService.register(user);
     }
 
     @PostMapping("get_forget_question")
     public CommonResponse<String> getForgetQuestion(
-            @RequestParam @Validated @NotBlank(message = "用户名不能为空") String username){
+            @RequestParam @Validated @NotBlank(message = "用户名不能为空") String username) {
         return userService.getForgetQuestion(username);
     }
 
@@ -58,34 +59,34 @@ public class UserController {
     public CommonResponse<String> checkForgetAnswer(
             @RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
             @RequestParam @Validated @NotBlank(message = "忘记密码问题不能为空") String question,
-            @RequestParam @Validated @NotBlank(message = "忘记密码问题答案不能为空") String answer){
-        return userService.checkForgetAnswer(username,question,answer);
+            @RequestParam @Validated @NotBlank(message = "忘记密码问题答案不能为空") String answer) {
+        return userService.checkForgetAnswer(username, question, answer);
     }
 
     @PostMapping("reset_forget_password")
     public CommonResponse<String> resetForgetPassword(
             @RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
             @RequestParam @Validated @NotBlank(message = "新密码不能为空") String newPassword,
-            @RequestParam @Validated @NotBlank(message = "重置密码token不能为空") String forgetToken){
-        return userService.resetForgetPassword(username,newPassword,forgetToken);
+            @RequestParam @Validated @NotBlank(message = "重置密码token不能为空") String forgetToken) {
+        return userService.resetForgetPassword(username, newPassword, forgetToken);
     }
 
     @PostMapping("reset_password")
     public CommonResponse<String> resetPassword(
             @RequestParam @Validated @NotBlank(message = "旧密码不能为空") String oldPassword,
             @RequestParam @Validated @NotBlank(message = "新密码不能为空") String newPassword,
-            HttpSession session){
+            HttpSession session) {
         User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
-        if(loginUser == null){
+        if (loginUser == null) {
             return CommonResponse.createForError("用户未登录");
         }
-        return userService.resetPassword(oldPassword, newPassword,loginUser);
+        return userService.resetPassword(oldPassword, newPassword, loginUser);
     }
 
     @PostMapping("get_user_detail")
-    public CommonResponse<User> getUserDetail(HttpSession session){
+    public CommonResponse<User> getUserDetail(HttpSession session) {
         User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
-        if(loginUser == null){
+        if (loginUser == null) {
             return CommonResponse.createForError("用户未登录");
         }
         return userService.getUserDetail(loginUser.getId());
@@ -93,9 +94,9 @@ public class UserController {
 
     @PostMapping("update_user_info")
     public CommonResponse<User> updateUserInfo(@RequestBody @Valid UpdateUserDTO updateUser,
-                                               HttpSession session){
+                                               HttpSession session) {
         User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
-        if(loginUser == null){
+        if (loginUser == null) {
             return CommonResponse.createForError("用户未登录");
         }
         loginUser.setEmail(updateUser.getEmail());
@@ -104,7 +105,7 @@ public class UserController {
         loginUser.setAnswer(updateUser.getAnswer());
 
         CommonResponse<String> result = userService.updateUserInfo(loginUser);
-        if(result.isSuccess()){
+        if (result.isSuccess()) {
             loginUser = userService.getUserDetail(loginUser.getId()).getData();
             session.setAttribute(CONSTANT.LOGIN_USER, loginUser);
             return CommonResponse.createForSuccess(loginUser);
@@ -113,7 +114,7 @@ public class UserController {
     }
 
     @GetMapping("logout")
-    public CommonResponse<String> logout(HttpSession session){
+    public CommonResponse<String> logout(HttpSession session) {
         session.removeAttribute(CONSTANT.LOGIN_USER);
         return CommonResponse.createForSuccessMessage("退出登录成功");
     }
