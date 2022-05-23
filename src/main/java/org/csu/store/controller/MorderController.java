@@ -22,12 +22,11 @@ public class MorderController {
     @Autowired
     private CartService cartService;
 
-    @PostMapping("payDone")//购买完成，建立订单
+    @PostMapping("pay_Done")//购买完成，建立订单
     public CommonResponse<String> payDone(
             @RequestBody OrderBO orderBO) {
-        CommonResponse<String> CommonResponse=cartService.deleteFromCart(orderBO.getBuyerId(),orderBO.getProId() );
+        CommonResponse<String> CommonResponse=cartService.deleteFromCart(orderBO.getBuyerId(),orderBO.getProId());
         if(CommonResponse.isSuccess()){
-
             return (morderService.insertMorder(orderBO));
         }
         return CommonResponse;

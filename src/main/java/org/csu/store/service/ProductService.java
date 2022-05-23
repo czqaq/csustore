@@ -12,13 +12,21 @@ public interface ProductService {
 
     CommonResponse<String> addProduct(ProductBO productBO);
 
-    CommonResponse<Product> selectByproId(Integer proId);
+    CommonResponse<Product> searchProByProId(Integer proId);
+
+    CommonResponse<List<Product>>  searchProByKeyWord(String KeyWord);
+
+    CommonResponse<List<Product>>  searchProByType(String type);
+
+    CommonResponse<List<Product>>  searchProByUserId(Integer sellerId);
+
+    CommonResponse<String> delectProByProId(Integer proId);
+
+    CommonResponse<String> updatePro(Product product);
+
+    CommonResponse<List<Product>> selectLastRecord(Integer num);
 
 
-    CommonResponse<String> delectByproId(Integer proId);
 
 
-    CommonResponse<String> updateProduct(Product product);
-
-//    CommonResponse<String> addProType(Product product);
 }
