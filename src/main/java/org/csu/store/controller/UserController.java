@@ -6,15 +6,19 @@ import org.csu.store.common.ResponseCode;
 import org.csu.store.domain.User;
 import org.csu.store.dto.UpdateUserDTO;
 import org.csu.store.service.UserService;
+import org.csu.store.util.CookieUtil;
 import org.csu.store.util.JSONUtil;
+import org.csu.store.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/user/")
@@ -24,15 +28,20 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     @PostMapping("login")
     public CommonResponse<User> login(@RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
                                       @RequestParam @Validated @NotBlank(message = "密码不能为空") String password,
-                                      HttpSession session) {
+                                      HttpSession session,
+                                      HttpServletResponse httpServletResponse) {
         CommonResponse<User> response = userService.login(username, password);
         if (response.isSuccess()) {
             session.setAttribute(CONSTANT.LOGIN_USER, response.getData());
-            String userJson = JSONUtil.objectToString(response.getData());
-            //new RedisUtil().getTemplate().opsForValue.set(session.getId(), userJson);
+//            String userJson = JSONUtil.objectToString(response.getData());
+//            redisUtil.getTemplate().opsForValue().set(session.getId(), userJson, 60, TimeUnit.MINUTES);
+//            CookieUtil.writeLoginToken(httpServletResponse, session.getId());
         }
         return response;
     }
@@ -86,6 +95,7 @@ public class UserController {
     @PostMapping("get_user_detail")
     public CommonResponse<User> getUserDetail(HttpSession session) {
         User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
+//          从redis拿，反序列化
         if (loginUser == null) {
             return CommonResponse.createForError("用户未登录");
         }
@@ -116,6 +126,7 @@ public class UserController {
     @GetMapping("logout")
     public CommonResponse<String> logout(HttpSession session) {
         session.removeAttribute(CONSTANT.LOGIN_USER);
+//        删除redis的key
         return CommonResponse.createForSuccessMessage("退出登录成功");
     }
 

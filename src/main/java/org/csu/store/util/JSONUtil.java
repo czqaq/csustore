@@ -6,9 +6,13 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import jdk.internal.org.objectweb.asm.TypeReference;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import org.apache.commons.lang3.StringUtils;
 import org.csu.store.domain.User;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
@@ -20,6 +24,11 @@ public class JSONUtil {
         objectMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
         //将默认的把Data转换为Timestamp设置为false
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        //设置日期格式
+//        JavaTimeModule javaTimeModule = new JavaTimeModule();
+//        javaTimeModule.addSerializer(LocalTime.class, new LocalTimeSerializer(DateTimeFormatter.BASIC_ISO_DATE));
+//
+//        objectMapper.registerModule(javaTimeModule);
 
         //将空Bean进行序列化时的错误忽略，返回{}
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
