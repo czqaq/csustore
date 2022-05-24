@@ -95,7 +95,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public CommonResponse<String> updatePro(Product product) {
-          int row = productMapper.updateById(product);
+        int row = productMapper.updateById(product);
         if(row==1){
             return CommonResponse.createForSuccessMessage("修改成功");
         }
