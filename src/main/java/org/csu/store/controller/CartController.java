@@ -5,6 +5,7 @@ import org.csu.store.domain.Cart;
 import org.csu.store.domain.Product;
 import org.csu.store.domain.User;
 import org.csu.store.service.CartService;
+import org.csu.store.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,12 +24,19 @@ public class CartController {
 
     @Autowired
     private CartService cartService;
-
+    @Autowired
+    private ProductService productService;
     @PostMapping("get_cart")
     public CommonResponse<List<Product>> getCart(@RequestParam @Validated @NotBlank(message = "用户id不能为空") String userId) {
         List<Product> cartProduct = new ArrayList<>();
         Cart cart = cartService.getCart(Integer.valueOf(userId)).getData();
-        // TODO: 2022/5/11
+
+        System.out.println("购物车列表：" + cart);
+        String[] proIds  = cart.getItems().split(",");
+        for (String proId : proIds) {
+            cartProduct.add(productService.searchProByProId(Integer.parseInt(proId)).getData());
+        }
+
         return CommonResponse.createForSuccess(cartProduct);
     }
 
