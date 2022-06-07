@@ -23,8 +23,8 @@ public class MorderController {
     private CartService cartService;
 
     @PostMapping("pay_Done")//购买完成，建立订单
-    public CommonResponse<String> payDone(
-            @RequestBody OrderBO orderBO) {
+    public CommonResponse<String> payDone(@RequestBody OrderBO orderBO) {
+        System.out.println(orderBO.getProId());
         CommonResponse<String> CommonResponse=cartService.deleteFromCart(orderBO.getBuyerId(),orderBO.getProId());
         if(CommonResponse.isSuccess()){
             return (morderService.insertMorder(orderBO));

@@ -105,11 +105,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public CommonResponse<List<Product>> selectLastRecord(Integer num) {
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        //查询名字为 Tom 的一条记录
-        queryWrapper.gt("num",num);
+        queryWrapper.orderByDesc("id");
         List<Product> list= productMapper.selectList(queryWrapper);
         if (!list.isEmpty()){
-            return CommonResponse.createForSuccess(list);
+            return CommonResponse.createForSuccess(list.subList(0, num));
         }
         return CommonResponse.createForError("无商品");
     }

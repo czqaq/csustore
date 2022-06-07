@@ -70,21 +70,23 @@ public class ProductController {
     public CommonResponse<List<Buyproduct>> searchBuyedPro(@RequestParam @Validated @NotBlank(message = "卖家id不能为空") String userId) {
         if (morderService.searchBuyProById(Integer.valueOf(userId)).isSuccess()) {
             List<Morder> mordersList = morderService.searchBuyProById(Integer.valueOf(userId)).getData();
-            String username = userService.getUserDetail(Integer.valueOf(userId)).getData().getUsername();
+
+
             List<Buyproduct> Buyproductlist = new ArrayList<>();
             for (Morder m : mordersList) {//循环商品编号
                 Product product = productService.searchProByProId(m.getProId()).getData();
                 Buyproduct bp = new Buyproduct();
                 bp.setProId(product.getId());
+                String username = userService.getUserDetail(product.getSellerId()).getData().getUsername();
                 bp.setUserName(username);
                 bp.setTypeName(product.getType());
                 bp.setProTitle(product.getTitle());
                 bp.setProDetail(product.getDetail());
-                bp.setImageUrl(product.getImgUrl());
+                bp.setImgUrl(product.getImgUrl());
                 bp.setProTime(product.getUpTime());
                 bp.setProPrice(product.getPrice());
                 bp.setOrdTime(m.getTime());
-                bp.setNum(product.getNum());
+                bp.setNum(1);
                 Buyproductlist.add(bp);
             }
             return CommonResponse.createForSuccess(Buyproductlist);

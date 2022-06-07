@@ -39,6 +39,7 @@ public class UserController {
         CommonResponse<User> response = userService.login(username, password);
         if (response.isSuccess()) {
             session.setAttribute(CONSTANT.LOGIN_USER, response.getData());
+            System.out.println("登录session信息:" + session.getId());
 //            String userJson = JSONUtil.objectToString(response.getData());
 //            redisUtil.getTemplate().opsForValue().set(session.getId(), userJson, 60, TimeUnit.MINUTES);
 //            CookieUtil.writeLoginToken(httpServletResponse, session.getId());

@@ -16,7 +16,7 @@ public class Buyproduct {
     private String typeName;
     private String proPrice;
     private String proDetail;
-    private String imageUrl;
+    private String imgUrl;
     private LocalDateTime proTime;
     private LocalDateTime ordTime;
     private Integer num;
