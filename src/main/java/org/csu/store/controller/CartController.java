@@ -35,24 +35,30 @@ public class CartController {
     public CommonResponse<List<CartProductVO>> getCart(@RequestParam @Validated @NotBlank(message = "用户id不能为空") String userId) {
         List<CartProductVO> cartProduct = new ArrayList<>();
         Cart cart = cartService.getCart(Integer.valueOf(userId)).getData();
-
-        System.out.println("购物车列表：" + cart);
-        String[] proIds = cart.getItems().split(",");
-        for (String proId : proIds) {
-            CartProductVO item = new CartProductVO();
-            Product product = productService.searchProByProId(Integer.parseInt(proId)).getData();
-            item.setId(product.getId());
-            item.setDetail(product.getDetail());
-            item.setImgUrl(product.getImgUrl());
-            item.setPrice(product.getPrice());
-            item.setTitle(product.getTitle());
-            item.setType(product.getType());
-            item.setUpTime(product.getUpTime());
-            String sellerName = userService.getUserDetail(product.getSellerId()).getData().getUsername();
-            item.setSellerName(sellerName);
-            cartProduct.add(item);
+        String items = "";
+        try {
+            items = cart.getItems();
+        } catch (NullPointerException e) {
+//            e.printStackTrace();
         }
-
+        if (!items.equals("")) {
+            System.out.println("购物车列表：" + cart);
+            String[] proIds = cart.getItems().split(",");
+            for (String proId : proIds) {
+                CartProductVO item = new CartProductVO();
+                Product product = productService.searchProByProId(Integer.parseInt(proId)).getData();
+                item.setId(product.getId());
+                item.setDetail(product.getDetail());
+                item.setImgUrl(product.getImgUrl());
+                item.setPrice(product.getPrice());
+                item.setTitle(product.getTitle());
+                item.setType(product.getType());
+                item.setUpTime(product.getUpTime());
+                String sellerName = userService.getUserDetail(product.getSellerId()).getData().getUsername();
+                item.setSellerName(sellerName);
+                cartProduct.add(item);
+            }
+        }
         return CommonResponse.createForSuccess(cartProduct);
     }
 
