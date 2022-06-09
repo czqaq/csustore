@@ -109,10 +109,10 @@ public class UserController {
     @PostMapping("get_user_detail")
     public CommonResponse<User> getUserDetail(HttpServletRequest request){
         String loginToken = CookieUtil.readLoginToken(request);
-        if(loginToken == null){
+        String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
+        if(userJson == null){
             return CommonResponse.createForError("用户未登录");
         }
-        String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
         User loginUser=JSONUtil.stringToObject(userJson,User.class);
         return userService.getUserDetail(loginUser.getId());
     }
@@ -121,10 +121,10 @@ public class UserController {
     public CommonResponse<User> updateUserInfo(@RequestBody @Valid UpdateUserDTO updateUser,
                                                HttpSession session,HttpServletRequest request,HttpServletResponse httpServletResponse){
         String loginToken = CookieUtil.readLoginToken(request);
-        if(loginToken == null){
+        String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
+        if(userJson == null){
             return CommonResponse.createForError("用户未登录");
         }
-        String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
         User loginUser=JSONUtil.stringToObject(userJson,User.class);
         loginUser.setEmail(updateUser.getEmail());
         loginUser.setPhone(updateUser.getPhone());
