@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
@@ -42,6 +43,17 @@ public class UserController {
             String userJson = JSONUtil.objectToString(response.getData());
             redisUtil.getTemplate().opsForValue().set(session.getId(),userJson,60, TimeUnit.MINUTES);
             CookieUtil.writeLoginToken(httpServletResponse,session.getId());
+        }
+        return response;
+    }
+    @PostMapping("login_without_redis")
+    public CommonResponse<User> loginWithoutRedis(@RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
+                                      @RequestParam @Validated @NotBlank(message = "密码不能为空") String password,
+                                      HttpSession session,
+                                      HttpServletResponse httpServletResponse) {
+        CommonResponse<User> response = userService.login(username, password);
+        if (response.isSuccess()) {
+            session.setAttribute(CONSTANT.LOGIN_USER, response.getData());
         }
         return response;
     }
@@ -84,47 +96,59 @@ public class UserController {
     public CommonResponse<String> resetPassword(
             @RequestParam @Validated @NotBlank(message = "旧密码不能为空") String oldPassword,
             @RequestParam @Validated @NotBlank(message = "新密码不能为空") String newPassword,
-            HttpSession session){
-        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
-        if(loginUser == null){
+            HttpServletRequest request){
+        String loginToken = CookieUtil.readLoginToken(request);
+        if(loginToken == null){
             return CommonResponse.createForError("用户未登录");
         }
+        String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
+        User loginUser=JSONUtil.stringToObject(userJson,User.class);
         return userService.resetPassword(oldPassword, newPassword,loginUser);
     }
 
     @PostMapping("get_user_detail")
-    public CommonResponse<User> getUserDetail(HttpSession session){
-        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
-        if(loginUser == null){
+    public CommonResponse<User> getUserDetail(HttpServletRequest request){
+        String loginToken = CookieUtil.readLoginToken(request);
+        if(loginToken == null){
             return CommonResponse.createForError("用户未登录");
         }
+        String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
+        User loginUser=JSONUtil.stringToObject(userJson,User.class);
         return userService.getUserDetail(loginUser.getId());
     }
 
     @PostMapping("update_user_info")
     public CommonResponse<User> updateUserInfo(@RequestBody @Valid UpdateUserDTO updateUser,
-                                               HttpSession session){
-        User loginUser = (User) session.getAttribute(CONSTANT.LOGIN_USER);
-        if(loginUser == null){
+                                               HttpSession session,HttpServletRequest request,HttpServletResponse httpServletResponse){
+        String loginToken = CookieUtil.readLoginToken(request);
+        if(loginToken == null){
             return CommonResponse.createForError("用户未登录");
         }
+        String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
+        User loginUser=JSONUtil.stringToObject(userJson,User.class);
         loginUser.setEmail(updateUser.getEmail());
         loginUser.setPhone(updateUser.getPhone());
         loginUser.setQuestion(updateUser.getQuestion());
         loginUser.setAnswer(updateUser.getAnswer());
-
+        System.out.println(loginUser);
         CommonResponse<String> result = userService.updateUserInfo(loginUser);
         if(result.isSuccess()){
-            loginUser = userService.getUserDetail(loginUser.getId()).getData();
             session.setAttribute(CONSTANT.LOGIN_USER, loginUser);
+            userJson = JSONUtil.objectToString(loginUser);
+            redisUtil.getTemplate().delete(loginToken);
+            redisUtil.getTemplate().opsForValue().set(session.getId(),userJson,60, TimeUnit.MINUTES);
+            CookieUtil.deleteLoginToken(request,httpServletResponse);
+            CookieUtil.writeLoginToken(httpServletResponse,session.getId());
             return CommonResponse.createForSuccess(loginUser);
         }
         return CommonResponse.createForError(result.getMessage());
     }
 
     @GetMapping("logout")
-    public CommonResponse<String> logout(HttpSession session){
-        session.removeAttribute(CONSTANT.LOGIN_USER);
+    public CommonResponse<String> logout(HttpServletRequest request,HttpServletResponse httpServletResponse){
+        String loginToken = CookieUtil.readLoginToken(request);
+        redisUtil.getTemplate().delete(loginToken);
+        CookieUtil.deleteLoginToken(request,httpServletResponse);
         return CommonResponse.createForSuccessMessage("退出登录成功");
     }
 

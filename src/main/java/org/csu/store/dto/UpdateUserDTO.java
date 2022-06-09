@@ -11,6 +11,7 @@ public class UpdateUserDTO {
     private Integer id;
 
     @NotBlank(message = "邮箱不能为空")
+
     private String email;
     @NotBlank(message = "电话号码不能为空")
     private String phone;
