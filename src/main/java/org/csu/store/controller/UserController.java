@@ -10,7 +10,6 @@ import org.csu.store.util.CookieUtil;
 import org.csu.store.util.JSONUtil;
 import org.csu.store.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,11 +45,11 @@ public class UserController {
         }
         return response;
     }
+
     @PostMapping("login_without_redis")
     public CommonResponse<User> loginWithoutRedis(@RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
                                       @RequestParam @Validated @NotBlank(message = "密码不能为空") String password,
-                                      HttpSession session,
-                                      HttpServletResponse httpServletResponse) {
+                                      HttpSession session) {
         CommonResponse<User> response = userService.login(username, password);
         if (response.isSuccess()) {
             session.setAttribute(CONSTANT.LOGIN_USER, response.getData());
@@ -114,7 +113,7 @@ public class UserController {
             return CommonResponse.createForError("用户未登录");
         }
         User loginUser=JSONUtil.stringToObject(userJson,User.class);
-        return userService.getUserDetail(loginUser.getId());
+        return CommonResponse.createForSuccess(loginUser);
     }
 
     @PostMapping("update_user_info")
