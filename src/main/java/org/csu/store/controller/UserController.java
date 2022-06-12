@@ -10,8 +10,10 @@ import org.csu.store.util.CookieUtil;
 import org.csu.store.util.JSONUtil;
 import org.csu.store.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.support.SessionStatus;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,22 +36,35 @@ public class UserController {
     @PostMapping("login")
     public CommonResponse<User> login(@RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
                                       @RequestParam @Validated @NotBlank(message = "密码不能为空") String password,
+                                      HttpServletRequest request,
                                       HttpSession session,
                                       HttpServletResponse httpServletResponse) {
-        CommonResponse<User> response = userService.login(username, password);
-        if (response.isSuccess()) {
-            session.setAttribute(CONSTANT.LOGIN_USER, response.getData());
-            String userJson = JSONUtil.objectToString(response.getData());
-            redisUtil.getTemplate().opsForValue().set(session.getId(),userJson,60, TimeUnit.MINUTES);
-            CookieUtil.writeLoginToken(httpServletResponse,session.getId());
+        System.out.println("session id: " + session.getId());
+        System.out.println("是否是新session: " + session.isNew());
+        if (session.isNew()) {
+            CommonResponse<User> response = userService.login(username, password);
+            if (response.isSuccess()) {
+                session.setAttribute(CONSTANT.LOGIN_USER, response.getData());
+                String userJson = JSONUtil.objectToString(response.getData());
+                redisUtil.getTemplate().opsForValue().set(session.getId(), userJson, 60, TimeUnit.MINUTES);
+                CookieUtil.writeLoginToken(httpServletResponse, session.getId());
+            }
+
+            return response;
+        } else {
+            String loginToken = CookieUtil.readLoginToken(request);
+            String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
+            User user = JSONUtil.stringToObject(userJson, User.class);
+            return CommonResponse.createForSuccess("读取redis登录", user);
         }
-        return response;
+
     }
 
     @PostMapping("login_without_redis")
     public CommonResponse<User> loginWithoutRedis(@RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
-                                      @RequestParam @Validated @NotBlank(message = "密码不能为空") String password,
-                                      HttpSession session) {
+                                                  @RequestParam @Validated @NotBlank(message = "密码不能为空") String password,
+                                                  HttpSession session,
+                                                  HttpServletResponse httpServletResponse) {
         CommonResponse<User> response = userService.login(username, password);
         if (response.isSuccess()) {
             session.setAttribute(CONSTANT.LOGIN_USER, response.getData());
@@ -65,13 +80,13 @@ public class UserController {
     }
 
     @PostMapping("register")
-        public CommonResponse<String> register(@RequestBody @Valid User user){
+    public CommonResponse<String> register(@RequestBody @Valid User user) {
         return userService.register(user);
     }
 
     @PostMapping("get_forget_question")
     public CommonResponse<String> getForgetQuestion(
-            @RequestParam @Validated @NotBlank(message = "用户名不能为空") String username){
+            @RequestParam @Validated @NotBlank(message = "用户名不能为空") String username) {
         return userService.getForgetQuestion(username);
     }
 
@@ -79,75 +94,82 @@ public class UserController {
     public CommonResponse<String> checkForgetAnswer(
             @RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
             @RequestParam @Validated @NotBlank(message = "忘记密码问题不能为空") String question,
-            @RequestParam @Validated @NotBlank(message = "忘记密码问题答案不能为空") String answer){
-        return userService.checkForgetAnswer(username,question,answer);
+            @RequestParam @Validated @NotBlank(message = "忘记密码问题答案不能为空") String answer) {
+        return userService.checkForgetAnswer(username, question, answer);
     }
 
     @PostMapping("reset_forget_password")
     public CommonResponse<String> resetForgetPassword(
             @RequestParam @Validated @NotBlank(message = "用户名不能为空") String username,
             @RequestParam @Validated @NotBlank(message = "新密码不能为空") String newPassword,
-            @RequestParam @Validated @NotBlank(message = "重置密码token不能为空") String forgetToken){
-        return userService.resetForgetPassword(username,newPassword,forgetToken);
+            @RequestParam @Validated @NotBlank(message = "重置密码token不能为空") String forgetToken) {
+        return userService.resetForgetPassword(username, newPassword, forgetToken);
     }
 
     @PostMapping("reset_password")
     public CommonResponse<String> resetPassword(
             @RequestParam @Validated @NotBlank(message = "旧密码不能为空") String oldPassword,
             @RequestParam @Validated @NotBlank(message = "新密码不能为空") String newPassword,
-            HttpServletRequest request){
+            HttpServletRequest request) {
         String loginToken = CookieUtil.readLoginToken(request);
-        if(loginToken == null){
+        if (loginToken == null) {
             return CommonResponse.createForError("用户未登录");
         }
         String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
-        User loginUser=JSONUtil.stringToObject(userJson,User.class);
-        return userService.resetPassword(oldPassword, newPassword,loginUser);
+        User loginUser = JSONUtil.stringToObject(userJson, User.class);
+        return userService.resetPassword(oldPassword, newPassword, loginUser);
     }
 
     @PostMapping("get_user_detail")
-    public CommonResponse<User> getUserDetail(HttpServletRequest request){
+    public CommonResponse<User> getUserDetail(HttpServletRequest request) {
         String loginToken = CookieUtil.readLoginToken(request);
         String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
-        if(userJson == null){
+        if (userJson == null) {
             return CommonResponse.createForError("用户未登录");
         }
-        User loginUser=JSONUtil.stringToObject(userJson,User.class);
-        return CommonResponse.createForSuccess(loginUser);
+        User loginUser = JSONUtil.stringToObject(userJson, User.class);
+        return userService.getUserDetail(loginUser.getId());
     }
 
     @PostMapping("update_user_info")
     public CommonResponse<User> updateUserInfo(@RequestBody @Valid UpdateUserDTO updateUser,
-                                               HttpSession session,HttpServletRequest request,HttpServletResponse httpServletResponse){
+                                               HttpSession session, HttpServletRequest request, HttpServletResponse httpServletResponse) {
         String loginToken = CookieUtil.readLoginToken(request);
         String userJson = redisUtil.getTemplate().opsForValue().get(loginToken);
-        if(userJson == null){
+        if (userJson == null) {
             return CommonResponse.createForError("用户未登录");
         }
-        User loginUser=JSONUtil.stringToObject(userJson,User.class);
+        User loginUser = JSONUtil.stringToObject(userJson, User.class);
         loginUser.setEmail(updateUser.getEmail());
         loginUser.setPhone(updateUser.getPhone());
         loginUser.setQuestion(updateUser.getQuestion());
         loginUser.setAnswer(updateUser.getAnswer());
         System.out.println(loginUser);
         CommonResponse<String> result = userService.updateUserInfo(loginUser);
-        if(result.isSuccess()){
+        if (result.isSuccess()) {
             session.setAttribute(CONSTANT.LOGIN_USER, loginUser);
             userJson = JSONUtil.objectToString(loginUser);
             redisUtil.getTemplate().delete(loginToken);
-            redisUtil.getTemplate().opsForValue().set(session.getId(),userJson,60, TimeUnit.MINUTES);
-            CookieUtil.deleteLoginToken(request,httpServletResponse);
-            CookieUtil.writeLoginToken(httpServletResponse,session.getId());
+            redisUtil.getTemplate().opsForValue().set(session.getId(), userJson, 60, TimeUnit.MINUTES);
+            CookieUtil.deleteLoginToken(request, httpServletResponse);
+            CookieUtil.writeLoginToken(httpServletResponse, session.getId());
             return CommonResponse.createForSuccess(loginUser);
         }
         return CommonResponse.createForError(result.getMessage());
     }
 
     @GetMapping("logout")
-    public CommonResponse<String> logout(HttpServletRequest request,HttpServletResponse httpServletResponse){
+    public CommonResponse<String> logout(HttpServletRequest request,
+                                         HttpSession session,
+                                         SessionStatus sessionStatus,
+                                         HttpServletResponse httpServletResponse) {
+        // 清空本地session
+        session.invalidate();
+        sessionStatus.setComplete();
+        // 清空redis信息
         String loginToken = CookieUtil.readLoginToken(request);
         redisUtil.getTemplate().delete(loginToken);
-        CookieUtil.deleteLoginToken(request,httpServletResponse);
+        CookieUtil.deleteLoginToken(request, httpServletResponse);
         return CommonResponse.createForSuccessMessage("退出登录成功");
     }
 
