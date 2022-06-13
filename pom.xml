@@ -91,6 +91,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                    <mainClass>org.csu.store.CsuStoreApplication</mainClass>
+
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
